@@ -7,6 +7,8 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
+    app.setOrganizationName("somename");
+    app.setOrganizationDomain("somename");
     QQmlApplicationEngine engine;
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
@@ -22,8 +24,8 @@ int main(int argc, char *argv[])
     QVariant len = engine.rootObjects().length();
 
     FileSyncMaster master;
-    QObject::connect(item, SIGNAL(startPressed()),
-                      &master, SLOT(startFilePasring()));
+    QObject::connect(item, SIGNAL(startPressed(QVariant,QVariant)),
+                      &master, SLOT(startFilePasring(QVariant,QVariant)));
 
 
     return app.exec();

@@ -2,6 +2,8 @@
 #define FILESYNCMASTER_H
 
 #include <QObject>
+#include <QVariant>
+
 
 class FileSyncMaster : public QObject
 {
@@ -10,7 +12,7 @@ public:
     explicit FileSyncMaster(QObject *parent = nullptr);
 
 public slots:
-    void startFilePasring();
+    void startFilePasring(QVariant src,QVariant dest);
 };
 
 #endif // FILESYNCMASTER_H
