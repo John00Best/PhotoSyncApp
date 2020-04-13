@@ -1,31 +1,48 @@
-#include "AnalyzeWorker.h"
 #include <QDir>
 #include <QtDebug>
 #include <QFileInfo>
 #include <QFileInfoList>
+#include <QThreadPool>
 
-AnalyzeWorker::AnalyzeWorker(const QString& folderPath)
-    : m_folderPath(folderPath)
+#include "AnalyzeWorker.h"
+#include "FolderWorker.h"
+
+
+void AnalyzeWorker::startFilePasring(QFileInfo startDir)
 {
-
+    m_folderList.append(startDir);
+    restartDirAnalzyer();
 }
 
-void AnalyzeWorker::run()
+
+void AnalyzeWorker::folderResults(QFileInfoList results)
 {
-    QFileInfoList folderList;
-    folderList.append(QFileInfo(m_folderPath));
-    QFileInfoList foundImageResults;
-    while (!folderList.isEmpty()) {
-        QFileInfo currentFolder = folderList.takeFirst();
+    m_dirMutex.lock();
+    m_folderList.append(results);
+    qDebug()<<"folderResults() adding : "<<results.length()<<" new folders. Total: "<<m_folderList.length();
+    m_dirMutex.unlock();
+    restartDirAnalzyer();
+}
 
-        auto dir = QDir(currentFolder.absoluteFilePath());
-        qInfo()<<"Parsing: "<<dir.absolutePath()<< " Dir is readable: "<<dir.isReadable();
 
-        folderList.append(dir.entryInfoList( {"*"},QDir::Dirs | QDir::NoDotAndDotDot));
+void AnalyzeWorker::imageResults(QFileInfoList results)
+{
+    m_imgMutex.lock();
+    m_foundImageResults.append(results);
+    qDebug()<<"imageResults() adding : "<<results.length()<<" new images. Total: "<<m_foundImageResults.length();
+    m_imgMutex.unlock();
+}
 
-        dir.setNameFilters({"*.jpg"});
-        foundImageResults.append(dir.entryInfoList(QDir::Files));
+void AnalyzeWorker::restartDirAnalzyer()
+{
+    QThreadPool *threadPool = QThreadPool::globalInstance();
+    while (!m_folderList.isEmpty()) {
+        FolderWorker* worker = new FolderWorker(m_folderList.takeFirst());
+        qDebug()<<"restartDirAnalzyer() Working on : "<<worker->m_dirFileInfo.absoluteFilePath();
+        connect(worker,&FolderWorker::newFolderResults,this,&AnalyzeWorker::folderResults);
+        connect(worker,&FolderWorker::newImageResults,this,&AnalyzeWorker::imageResults);
+        threadPool->start(worker);
     }
-
-    emit finished(foundImageResults);
 }
+
+

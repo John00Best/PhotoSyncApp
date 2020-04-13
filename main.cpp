@@ -11,6 +11,8 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("somename");
     QQmlApplicationEngine engine;
 
+    qRegisterMetaType<QFileInfoList>("QFileInfoList");
+
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
@@ -25,7 +27,7 @@ int main(int argc, char *argv[])
 
     FileSyncMaster master;
     QObject::connect(item, SIGNAL(startPressed(QVariant,QVariant)),
-                      &master, SLOT(startFilePasring(QVariant,QVariant)));
+                     &master, SLOT(startFilePasring(QVariant,QVariant)));
 
 
     return app.exec();

@@ -7,6 +7,8 @@
 #include <QMutex>
 
 
+#include "AnalyzeWorker.h"
+
 class FileSyncMaster : public QObject
 {
     Q_OBJECT
@@ -15,11 +17,10 @@ public:
 
 public slots:
     void startFilePasring(QVariant src,QVariant dest);
-    void dirAnalzyerFinished(QFileInfoList results);
 
 private:
-    QFileInfoList m_sourceFileList;
-    QMutex m_mutex;
+    AnalyzeWorker m_srcFolderWorker;
+    AnalyzeWorker m_destFolderWorker;
 };
 
 #endif // FILESYNCMASTER_H

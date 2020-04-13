@@ -3,18 +3,27 @@
 
 #include <QRunnable>
 #include <QFileInfoList>
+#include <QDir>
+#include <QDebug>
+#include <QObject>
+#include <QMutex>
 
-class AnalyzeWorker : public QRunnable
+
+class AnalyzeWorker : public QObject
 {
     Q_OBJECT
-public:
-    AnalyzeWorker(const QString& folderPath);
-    void run() override;
-signals:
-    void finished(QFileInfoList results);
+
+public slots:
+    void startFilePasring(QFileInfo startDir);
+    void folderResults(QFileInfoList results);
+    void imageResults(QFileInfoList results);
 
 private:
-    QString m_folderPath;
+    QMutex m_dirMutex,m_imgMutex;;
+    QFileInfoList m_folderList;
+    QFileInfoList m_foundImageResults;
+
+    void restartDirAnalzyer();
 };
 
 #endif // ANALYZEWORKER_H

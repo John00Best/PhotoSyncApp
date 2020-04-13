@@ -1,4 +1,5 @@
 QT += quick
+QT += concurrent
 
 CONFIG += c++11
 
@@ -33,4 +34,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     AnalyzeWorker.h \
-    FileSyncMaster.h
+    FileSyncMaster.h \
+    FolderWorker.h
