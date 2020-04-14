@@ -12,6 +12,8 @@
 class AnalyzeWorker : public QObject
 {
     Q_OBJECT
+public:
+    QFileInfoList m_foundImageResults;
 
 public slots:
     void startFilePasring(QFileInfo startDir);
@@ -21,7 +23,6 @@ public slots:
 private:
     QMutex m_dirMutex,m_imgMutex;;
     QFileInfoList m_folderList;
-    QFileInfoList m_foundImageResults;
 
     void restartDirAnalzyer();
 };

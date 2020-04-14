@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     qRegisterMetaType<QFileInfoList>("QFileInfoList");
+    qmlRegisterType<FileSyncMaster>("com.FileSyncMaster", 1, 0, "FileSyncMaster");
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
@@ -26,9 +27,18 @@ int main(int argc, char *argv[])
     QVariant len = engine.rootObjects().length();
 
     FileSyncMaster master;
+
     QObject::connect(item, SIGNAL(startPressed(QVariant,QVariant)),
                      &master, SLOT(startFilePasring(QVariant,QVariant)));
 
+    QObject::connect(&master, SIGNAL(syncChanged(QVariant,QVariant)),
+                     item, SIGNAL(syncChanged(QVariant,QVariant)));
+
+    QObject::connect(item, SIGNAL(startSync()),
+                     &master, SLOT(startSync()));
+
+    QObject::connect(&app, SIGNAL(aboutToQuit()),
+                     &master, SLOT(closing()));
 
     return app.exec();
 }
