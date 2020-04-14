@@ -34,6 +34,9 @@ int main(int argc, char *argv[])
     QObject::connect(&master, SIGNAL(syncChanged(QVariant,QVariant)),
                      item, SIGNAL(syncChanged(QVariant,QVariant)));
 
+    QObject::connect(&master, SIGNAL(syncChangedTotal(QVariant,QVariant)),
+                     item, SIGNAL(syncChangedTotal(QVariant,QVariant)));
+
     QObject::connect(item, SIGNAL(startSync()),
                      &master, SLOT(startSync()));
 

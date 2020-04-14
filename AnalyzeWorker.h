@@ -3,7 +3,7 @@
 
 #include <QRunnable>
 #include <QFileInfoList>
-#include <QDir>
+#include <QThreadPool>
 #include <QDebug>
 #include <QObject>
 #include <QMutex>
@@ -20,11 +20,16 @@ public slots:
     void folderResults(QFileInfoList results);
     void imageResults(QFileInfoList results);
 
+signals:
+    void parsingFinished();
+
 private:
     QMutex m_dirMutex,m_imgMutex;;
     QFileInfoList m_folderList;
+    QThreadPool m_threadPool;
 
     void restartDirAnalzyer();
+    void checkIfDone();
 };
 
 #endif // ANALYZEWORKER_H

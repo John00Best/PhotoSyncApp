@@ -35,5 +35,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     AnalyzeWorker.h \
     FileSyncMaster.h \
-    FolderWorker.h \
-    PictureScalerWorker.h
+    FolderWorker.h

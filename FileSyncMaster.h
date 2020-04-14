@@ -20,24 +20,24 @@ public:
 
 public slots:
     void startFilePasring(QVariant src,QVariant dest);
+    void finalizeParsing();
     void startSync();
     void closing();
 
 signals:
-       void syncChanged(QVariant syncDone,QVariant syncTotal);
-       void syncChangedTotal(QVariant syncDone,QVariant syncTotal);
+    void syncChanged(QVariant syncDone,QVariant syncTotal);
+    void syncChangedTotal(QVariant syncDone,QVariant syncTotal);
 
 private:
+    uint m_fileIsAlreadySynced;
     AnalyzeWorker m_srcFolderWorker;
-    AnalyzeWorker m_destFolderWorker;
     QString m_srcDirectory;
     QString m_destDirectory;
     QThreadPool m_threadPool;
     QList<QFuture<void>> m_threadStatusList;
-    int m_syncDone;
-    int m_syncTotal;
+    QList<QPair<QFileInfo,QFileInfo>> m_imageSyncPair;
 
-    //void scaleImage(const QFileInfo&  src,const QFileInfo&  dest);
+    void scaleImage(const QFileInfo&  src,const QFileInfo&  dest);
     void checkDestDir(const QFileInfo&  dest);
 
     void printPoolStatus();

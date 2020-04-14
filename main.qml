@@ -18,7 +18,6 @@ ApplicationWindow {
     property int lastSyncsDone: 0
     property double startTime: 0
 
-
     signal syncChanged(var syncDone,var syncTotal)
     signal syncChangedTotal(var syncDone,var syncTotal)
 
@@ -26,7 +25,7 @@ ApplicationWindow {
         var newTime = new Date().getTime()
         progressBarRun.to = syncTotal
         progressBarRun.value = syncDone
-        progressTextRun.text = syncDone+"/"+syncTotal+" - Pics/sec: "+Math.floor((syncDone-lastSyncsDone)/((newTime-startTime)/1000))
+        progressTextRun.text = syncDone+"/"+syncTotal+" ("+Math.floor((syncDone-lastSyncsDone)/((newTime-startTime)/1000))+" Pics/sec)"
 
         startTime = newTime
         lastSyncsDone = syncDone
@@ -103,7 +102,7 @@ ApplicationWindow {
 
         GroupBox {
             Layout.columnSpan: 2
-            Layout.preferredHeight: 50
+            implicitHeight: 70
             title: "Total Progress"
             Column {
                 ProgressBar {
@@ -119,7 +118,7 @@ ApplicationWindow {
 
         GroupBox {
             Layout.columnSpan: 2
-            Layout.preferredHeight: 50
+            implicitHeight: 70
             title: "Progress during current program run"
             Column {
                 ProgressBar {

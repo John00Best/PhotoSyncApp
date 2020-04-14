@@ -8,14 +8,14 @@
 #include <QFuture>
 #include <QtConcurrent>
 
-
 #include "FileSyncMaster.h"
 
-FileSyncMaster::FileSyncMaster(QObject *parent) : QObject(parent)
-  , m_syncDone(0)
-  , m_syncTotal(0)
+FileSyncMaster::FileSyncMaster(QObject *parent) :
+    QObject(parent),
+    m_fileIsAlreadySynced(0)
 {
     m_threadPool.setMaxThreadCount(16);
+    connect(&m_srcFolderWorker,&AnalyzeWorker::parsingFinished,this,&FileSyncMaster::finalizeParsing);
 }
 
 void FileSyncMaster::closing(){
@@ -41,9 +41,9 @@ void scaleImage(const QFileInfo&  src,const QFileInfo&  dest)
     }
 }
 
-void FileSyncMaster::startSync()
+void FileSyncMaster::finalizeParsing()
 {
-    int fileIsAlreadySynced = 0;
+    m_fileIsAlreadySynced = 0;
 
     foreach (const QFileInfo& srcFile, m_srcFolderWorker.m_foundImageResults)
     {
@@ -52,17 +52,26 @@ void FileSyncMaster::startSync()
         QFileInfo destFile(destinationFilePath);
         if(destFile.isReadable())
         {
-            fileIsAlreadySynced++;
+            m_fileIsAlreadySynced++;
         } else
         {
-            checkDestDir(destFile);
-            m_threadStatusList.append(QtConcurrent::run(&m_threadPool, &scaleImage,srcFile,destFile));
-
+            m_imageSyncPair.append(QPair<QFileInfo,QFileInfo>(srcFile,destFile));
         }
     }
-    qInfo()<<"Files synced: "<<QString::number(fileIsAlreadySynced)<<"/"<<m_srcFolderWorker.m_foundImageResults.length();
+    qInfo()<<"Files synced: "<<QString::number(m_fileIsAlreadySynced)<<"/"<<m_srcFolderWorker.m_foundImageResults.length();
+    emit syncChangedTotal(m_fileIsAlreadySynced,m_srcFolderWorker.m_foundImageResults.length());
+}
+
+void FileSyncMaster::startSync()
+{
+    for (const QPair<QFileInfo,QFileInfo>& filePair : m_imageSyncPair)
+    {
+        checkDestDir(filePair.second); // create destDir if not already
+        m_threadStatusList.append(QtConcurrent::run(&m_threadPool,this,&FileSyncMaster::scaleImage,filePair.first,filePair.second));
+    }
     QtConcurrent::run(this,&FileSyncMaster::printPoolStatus);
 }
+
 
 void FileSyncMaster::checkDestDir(const QFileInfo&  dest)
 {
@@ -76,10 +85,20 @@ void FileSyncMaster::checkDestDir(const QFileInfo&  dest)
     }
 }
 
+void FileSyncMaster::scaleImage(const QFileInfo&  src,const QFileInfo&  dest)
+{
+    QImage srcImage(src.absoluteFilePath());
+    QImage destImage = srcImage.scaledToHeight(800,Qt::SmoothTransformation);
+    bool ret = destImage.save(dest.absoluteFilePath());
+    if(!ret)
+    {
+        qInfo()<<"Save File: "<<dest.absoluteFilePath()<<" result: "<<(ret ? "true" : "false")<<": "<<destImage.size();
+    }
+}
 
 void FileSyncMaster::printPoolStatus()
 {
-    while(!m_threadPool.waitForDone(1000))
+    do
     {
         uint done = 0;
         foreach(QFuture<void> future,m_threadStatusList)
@@ -89,11 +108,8 @@ void FileSyncMaster::printPoolStatus()
                 done++;
             }
         }
-        m_syncDone = done;
-        m_syncTotal = m_threadStatusList.length();
-        emit syncChanged(QVariant(done),QVariant(m_syncTotal));
-        qInfo()<<"Status: "<<QString::number(done)<<"/"<<m_threadStatusList.length();
-    }
+        emit syncChanged(QVariant(done),QVariant(m_threadStatusList.length()));
+        emit syncChangedTotal(QVariant(m_fileIsAlreadySynced+done),QVariant(m_srcFolderWorker.m_foundImageResults.length()));
+        //qInfo()<<"Status: "<<QString::number(done)<<"/"<<m_threadStatusList.length();
+    } while(!m_threadPool.waitForDone(1000));
 }
-
-
