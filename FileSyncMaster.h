@@ -36,6 +36,7 @@ private:
     QThreadPool m_threadPool;
     QList<QFuture<void>> m_threadStatusList;
     QList<QPair<QFileInfo,QFileInfo>> m_imageSyncPair;
+    void startSyncDet();
 
     void scaleImage(const QFileInfo&  src,const QFileInfo&  dest);
     void checkDestDir(const QFileInfo&  dest);

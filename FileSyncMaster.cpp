@@ -25,8 +25,8 @@ void FileSyncMaster::closing(){
 
 void FileSyncMaster::startFilePasring(QVariant src,QVariant dest) {
     qInfo()<<"startFileParsing() Source: "<<src.toString()<<" Destination "<<dest.toString();
-    m_srcDirectory = src.toString().replace("file://","");
-    m_destDirectory = dest.toString().replace("file://","");
+    m_srcDirectory = src.toString().replace("file:///","");
+    m_destDirectory = dest.toString().replace("file:///","");
     m_srcFolderWorker.startFilePasring(m_srcDirectory);
 }
 
@@ -45,7 +45,7 @@ void FileSyncMaster::finalizeParsing()
 {
     m_fileIsAlreadySynced = 0;
 
-    foreach (const QFileInfo& srcFile, m_srcFolderWorker.m_foundImageResults)
+    for (const QFileInfo& srcFile : m_srcFolderWorker.m_foundImageResults)
     {
         QString relativeFilePathName = srcFile.absoluteFilePath().remove(m_srcDirectory,Qt::CaseInsensitive);
         QString destinationFilePath = m_destDirectory+relativeFilePathName;
@@ -64,12 +64,17 @@ void FileSyncMaster::finalizeParsing()
 
 void FileSyncMaster::startSync()
 {
+   QtConcurrent::run(this,&FileSyncMaster::startSyncDet);
+}
+
+void FileSyncMaster::startSyncDet()
+{
+    QtConcurrent::run(this,&FileSyncMaster::printPoolStatus);
     for (const QPair<QFileInfo,QFileInfo>& filePair : m_imageSyncPair)
     {
         checkDestDir(filePair.second); // create destDir if not already
         m_threadStatusList.append(QtConcurrent::run(&m_threadPool,this,&FileSyncMaster::scaleImage,filePair.first,filePair.second));
     }
-    QtConcurrent::run(this,&FileSyncMaster::printPoolStatus);
 }
 
 
@@ -98,10 +103,11 @@ void FileSyncMaster::scaleImage(const QFileInfo&  src,const QFileInfo&  dest)
 
 void FileSyncMaster::printPoolStatus()
 {
+    QThread::sleep(1);
     do
     {
         uint done = 0;
-        foreach(QFuture<void> future,m_threadStatusList)
+        for(QFuture<void> future : m_threadStatusList)
         {
             if(future.isFinished())
             {

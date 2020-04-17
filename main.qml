@@ -16,6 +16,7 @@ ApplicationWindow {
     property url sourceDirectory: ""
     property url destinationDirectory: ""
     property int lastSyncsDone: 0
+    property int firstSyncsDoneTime: -1
     property double startTime: 0
 
     signal syncChanged(var syncDone,var syncTotal)
@@ -23,9 +24,12 @@ ApplicationWindow {
 
     onSyncChanged: {
         var newTime = new Date().getTime()
+        if(firstSyncsDoneTime < 0) {
+               firstSyncsDoneTime = newTime;
+        }
         progressBarRun.to = syncTotal
         progressBarRun.value = syncDone
-        progressTextRun.text = syncDone+"/"+syncTotal+" ("+Math.floor((syncDone-lastSyncsDone)/((newTime-startTime)/1000))+" Pics/sec)"
+        progressTextRun.text = syncDone+"/"+syncTotal+" ("+Math.floor((syncDone-lastSyncsDone)/((newTime-startTime)/1000))+" Pics/sec)"+Math.round((syncDone)/((newTime-firstSyncsDoneTime)/1000))+" Pics/sec)"
 
         startTime = newTime
         lastSyncsDone = syncDone
