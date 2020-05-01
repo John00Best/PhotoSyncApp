@@ -9,6 +9,7 @@
 #include <QtConcurrent>
 
 #include "FileSyncMaster.h"
+#include "qexifimageheader.h"
 
 FileSyncMaster::FileSyncMaster(QObject *parent) :
     QObject(parent),
@@ -50,10 +51,10 @@ void FileSyncMaster::finalizeParsing()
         QString relativeFilePathName = srcFile.absoluteFilePath().remove(m_srcDirectory,Qt::CaseInsensitive);
         QString destinationFilePath = m_destDirectory+relativeFilePathName;
         QFileInfo destFile(destinationFilePath);
-        if(destFile.isReadable())
+        /*if(destFile.isReadable())
         {
             m_fileIsAlreadySynced++;
-        } else
+        } else*/
         {
             m_imageSyncPair.append(QPair<QFileInfo,QFileInfo>(srcFile,destFile));
         }
@@ -93,7 +94,43 @@ void FileSyncMaster::checkDestDir(const QFileInfo&  dest)
 void FileSyncMaster::scaleImage(const QFileInfo&  src,const QFileInfo&  dest)
 {
     QImage srcImage(src.absoluteFilePath());
-    QImage destImage = srcImage.scaledToHeight(800,Qt::SmoothTransformation);
+    QImage destImage;
+    QExifImageHeader header;
+    bool ret2 = header.loadFromJpeg(src.filePath());
+    if(!ret2) {
+        qInfo()<<"#################################ERROR QExifImageHeader::loadFromJpeg: ret2: "<<ret2;
+    }
+    QExifValue orientationValue = header.value(QExifImageHeader::ImageTag::Orientation);
+
+    //qInfo()<<"orientationValue: "<<src.fileName()<<" toByte: "<<orientationValue.toShort()<<" type: "<<orientationValue.type();
+
+    switch (orientationValue.toShort()) {
+    case 1:
+        destImage = srcImage;
+        break;
+    case 2:
+        destImage = srcImage.transformed(QTransform().rotate(180, Qt::YAxis));
+        break;
+    case 3:
+        destImage = srcImage.transformed(QTransform().rotate(180, Qt::ZAxis));
+        break;
+    case 4:
+        destImage = srcImage.transformed(QTransform().rotate(180, Qt::XAxis));
+        break;
+    case 5:
+        destImage = srcImage.transformed(QTransform().rotate(180, Qt::YAxis).rotate(90, Qt::ZAxis));
+        break;
+    case 6:
+        destImage = srcImage.transformed(QTransform().rotate(90, Qt::ZAxis));
+        break;
+    case 7:
+        destImage = srcImage.transformed(QTransform().rotate(180, Qt::XAxis).rotate(90, Qt::ZAxis));
+        break;
+    case 8:
+        destImage = srcImage.transformed(QTransform().rotate(270, Qt::ZAxis));
+        break;
+    }
+    destImage = destImage.scaledToHeight(800,Qt::SmoothTransformation);
     bool ret = destImage.save(dest.absoluteFilePath());
     if(!ret)
     {

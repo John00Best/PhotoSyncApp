@@ -17,7 +17,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         AnalyzeWorker.cpp \
         FileSyncMaster.cpp \
-        main.cpp
+        main.cpp \
+        qexifimageheader.cpp
 
 RESOURCES += qml.qrc
 
@@ -35,4 +36,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     AnalyzeWorker.h \
     FileSyncMaster.h \
-    FolderWorker.h
+    FolderWorker.h \
+    qexifimageheader.h
