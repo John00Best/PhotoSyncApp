@@ -47,9 +47,6 @@ ApplicationWindow {
     onInitSrcDestDirectory: {
         sourceDirectory = srcDir
         destinationDirectory = destDir
-
-        console.log("sourceDirectory: " + sourceDirectory+"s srcDir: " + srcDir)
-        console.log("destinationDirectory: " + destinationDirectory+"s destDir: " + destDir)
     }
 
     GridLayout {
@@ -63,7 +60,7 @@ ApplicationWindow {
             FileDialog {
                 id: sourceFileDialog
                 title: "Please choose Source Directory"
-                //folder: shortcuts.home
+                folder: sourceDirectory
                 selectFolder: true
                 selectExisting: true
                 onAccepted: {
@@ -82,7 +79,7 @@ ApplicationWindow {
             FileDialog {
                 id: destinationFileDialog
                 title: "Please choose Destination Directory"
-                //folder: shortcuts.home
+                folder: destinationDirectory
                 selectFolder: true
                 selectExisting: true
                 onAccepted: {
