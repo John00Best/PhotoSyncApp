@@ -15,22 +15,24 @@ ApplicationWindow {
     signal startSync()
     property url sourceDirectory: ""
     property url destinationDirectory: ""
-    property int lastSyncsDone: 0
-    property int firstSyncsDoneTime: -1
+    property double lastSyncsDone: 0
+    property double firstSyncsDoneTime: -1
+    property double firstSyncsDoneCount: -1
     property double startTime: 0
 
     signal syncChanged(var syncDone,var syncTotal)
     signal syncChangedTotal(var syncDone,var syncTotal)
+    signal initSrcDestDirectory(var srcDir,var destDir)
 
     onSyncChanged: {
         var newTime = new Date().getTime()
         if(firstSyncsDoneTime < 0) {
-               firstSyncsDoneTime = newTime;
+            firstSyncsDoneTime = newTime
         }
         progressBarRun.to = syncTotal
         progressBarRun.value = syncDone
-        progressTextRun.text = syncDone+"/"+syncTotal+" ("+Math.floor((syncDone-lastSyncsDone)/((newTime-startTime)/1000))+" Pics/sec)"+Math.round((syncDone)/((newTime-firstSyncsDoneTime)/1000))+" Pics/sec)"
-
+        var picsPerSecond = (syncDone-firstSyncsDoneCount)/((newTime-firstSyncsDoneTime)/1000)
+        progressTextRun.text = syncDone+"/"+syncTotal+" ("+picsPerSecond.toFixed(2)+" Pics/sec)"
         startTime = newTime
         lastSyncsDone = syncDone
     }
@@ -38,7 +40,16 @@ ApplicationWindow {
     onSyncChangedTotal: {
         progressBarTotal.to = syncTotal
         progressBarTotal.value = syncDone
+        firstSyncsDoneCount = syncDone
         progressTextTotal.text = syncDone+"/"+syncTotal
+    }
+
+    onInitSrcDestDirectory: {
+        sourceDirectory = srcDir
+        destinationDirectory = destDir
+
+        console.log("sourceDirectory: " + sourceDirectory+"s srcDir: " + srcDir)
+        console.log("destinationDirectory: " + destinationDirectory+"s destDir: " + destDir)
     }
 
     GridLayout {
@@ -56,9 +67,7 @@ ApplicationWindow {
                 selectFolder: true
                 selectExisting: true
                 onAccepted: {
-                    console.log("You chose sourceFileDialog: " + sourceFileDialog.folder)
                     sourceDirectory = sourceFileDialog.folder
-
                 }
             }
             id: selectSourceButton
@@ -78,7 +87,6 @@ ApplicationWindow {
                 selectExisting: true
                 onAccepted: {
                     destinationDirectory = destinationFileDialog.folder
-                    console.log("You chose destinationDirectory: " + destinationDirectory)
                 }
             }
 

@@ -11,12 +11,34 @@
 #include "FileSyncMaster.h"
 #include "qexifimageheader.h"
 
+//#ifdef __linux__
+    //linux code goes here
+#ifdef _WIN32
+    static const QString FILE_PROTOCOL_PREFIX = "file:///";
+#else
+    static const QString FILE_PROTOCOL_PREFIX = "file://";
+#endif
+
+#define QSETTINGS_SOURCE_DIR "SourceDirectory"
+#define QSETTINGS_DESTINATION_DIR "DestinationDirectory"
+
 FileSyncMaster::FileSyncMaster(QObject *parent) :
     QObject(parent),
     m_fileIsAlreadySynced(0)
 {
     m_threadPool.setMaxThreadCount(16);
     connect(&m_srcFolderWorker,&AnalyzeWorker::parsingFinished,this,&FileSyncMaster::finalizeParsing);
+}
+
+void FileSyncMaster::init()
+{
+    m_qSettings.beginGroup("Directories");
+    if(m_qSettings.value(QSETTINGS_SOURCE_DIR).isValid()){
+        QString srcDir = FILE_PROTOCOL_PREFIX + m_qSettings.value(QSETTINGS_SOURCE_DIR).toString();
+        QString destDir = FILE_PROTOCOL_PREFIX +m_qSettings.value(QSETTINGS_DESTINATION_DIR).toString();
+        emit initSrcDestDirectory(srcDir,destDir);
+    }
+    m_qSettings.endGroup();
 }
 
 void FileSyncMaster::closing(){
@@ -26,8 +48,15 @@ void FileSyncMaster::closing(){
 
 void FileSyncMaster::startFilePasring(QVariant src,QVariant dest) {
     qInfo()<<"startFileParsing() Source: "<<src.toString()<<" Destination "<<dest.toString();
-    m_srcDirectory = src.toString().replace("file:///","");
-    m_destDirectory = dest.toString().replace("file:///","");
+
+    m_srcDirectory = src.toString().replace(FILE_PROTOCOL_PREFIX,"");
+    m_destDirectory = dest.toString().replace(FILE_PROTOCOL_PREFIX,"");
+
+    m_qSettings.beginGroup("Directories");
+    m_qSettings.setValue(QSETTINGS_SOURCE_DIR,m_srcDirectory);
+    m_qSettings.setValue(QSETTINGS_DESTINATION_DIR,m_destDirectory);
+    m_qSettings.endGroup();
+
     m_srcFolderWorker.startFilePasring(m_srcDirectory);
 }
 
@@ -51,10 +80,18 @@ void FileSyncMaster::finalizeParsing()
         QString relativeFilePathName = srcFile.absoluteFilePath().remove(m_srcDirectory,Qt::CaseInsensitive);
         QString destinationFilePath = m_destDirectory+relativeFilePathName;
         QFileInfo destFile(destinationFilePath);
-        /*if(destFile.isReadable())
+#if 0
+        QExifImageHeader header;
+        bool ret2 = header.loadFromJpeg(srcFile.absoluteFilePath());
+        if(!ret2) {
+            qInfo()<<"#################################ERROR QExifImageHeader::loadFromJpeg: ret2: "<<ret2<<" srcFile.absoluteFilePath(): "<<srcFile.absoluteFilePath();
+        }
+        QExifValue orientationValue = header.value(QExifImageHeader::ImageTag::Orientation);
+        if(orientationValue.toShort() == 1/*destFile.isReadable()*/)
         {
             m_fileIsAlreadySynced++;
-        } else*/
+        } else
+#endif
         {
             m_imageSyncPair.append(QPair<QFileInfo,QFileInfo>(srcFile,destFile));
         }

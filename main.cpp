@@ -7,8 +7,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
-    app.setOrganizationName("somename");
-    app.setOrganizationDomain("somename");
+    app.setOrganizationName("JohnBest");
+    app.setOrganizationDomain("best.tk");
+    app.setApplicationName("PhotoSyncApp");
     QQmlApplicationEngine engine;
 
     qRegisterMetaType<QFileInfoList>("QFileInfoList");
@@ -37,11 +38,15 @@ int main(int argc, char *argv[])
     QObject::connect(&master, SIGNAL(syncChangedTotal(QVariant,QVariant)),
                      item, SIGNAL(syncChangedTotal(QVariant,QVariant)));
 
+    QObject::connect(&master, SIGNAL(initSrcDestDirectory(QVariant,QVariant)),
+                     item, SIGNAL(initSrcDestDirectory(QVariant,QVariant)));
+
     QObject::connect(item, SIGNAL(startSync()),
                      &master, SLOT(startSync()));
 
     QObject::connect(&app, SIGNAL(aboutToQuit()),
                      &master, SLOT(closing()));
 
+    master.init();
     return app.exec();
 }

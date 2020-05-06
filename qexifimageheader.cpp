@@ -125,8 +125,8 @@ public:
         // Bugfix: by Sig sig@sigvdr.de
         // a real copy of the value is needed.
         value.detach();
-//        value = "";
-//        value.append(v);
+        //        value = "";
+        //        value.append(v);
     }
     QByteArray value;
 };
@@ -869,7 +869,7 @@ bool QExifImageHeader::loadFromData(QByteArray *exifData) {
     Returns true if the data was successfully parsed and false otherwise.
     */
 bool QExifImageHeader::success(){
-   return readOk;
+    return readOk;
 }
 
 
@@ -1299,16 +1299,19 @@ QExifValue QExifImageHeader::readIfdValue(QDataStream &stream, int startPos, con
     switch (header.type) {
     case QExifValue::Byte:
     {
-        QVector<quint8> value( header.count );
-        if (header.count > 4) {
-            stream.device()->seek(startPos + header.offset);
-            for (quint32 i = 0; i < header.count; i++)
-                stream >> value[i];
-        } else {
-            for( quint32 i = 0; i < header.count; i++ )
-                value[ i ] = header.offsetBytes[ i ];
+        if (header.count > 0) {
+            QVector<quint8> value( header.count );
+            if (header.count > 4) {
+                stream.device()->seek(startPos + header.offset);
+                for (quint32 i = 0; i < header.count; i++)
+                    stream >> value[i];
+            } else {
+                for( quint32 i = 0; i < header.count; i++ )
+                    value[ i ] = header.offsetBytes[ i ];
+            }
+            return QExifValue(value);
         }
-        return QExifValue(value);
+        return QExifValue();
     }
     case QExifValue::Undefined:
         if (header.count > 4) {
@@ -1439,14 +1442,14 @@ bool QExifImageHeader::read(QIODevice *device)
     QExifValue exifIfdPointer = d->imageIfdValues.take(ImageTag(ExifIfdPointer));
     QExifValue gpsIfdPointer = d->imageIfdValues.take(ImageTag(GpsInfoIfdPointer));
     d->exifIfdValues = readIfdValues<ExifExtendedTag>(stream, startPos, exifIfdPointer);
-//qDebug() << "Vor:  Exifversion = " << d->exifIfdValues.value(ExifVersion).toByteArray();
+    //qDebug() << "Vor:  Exifversion = " << d->exifIfdValues.value(ExifVersion).toByteArray();
 
-//    // create a list for this keys prevents d-exifIfdValues from corruption ( see below )
-//    lExifIfdTags = d->exifIfdValues.keys();
-//    foreach ( QExifImageHeader::ExifExtendedTag tag,lExifIfdTags) {
-//        lExifIfdValues << d->exifIfdValues.value(tag);
-//    }
-//    qDebug() << "   : Exifversion = " << lExifIfdValues[3].toByteArray();
+    //    // create a list for this keys prevents d-exifIfdValues from corruption ( see below )
+    //    lExifIfdTags = d->exifIfdValues.keys();
+    //    foreach ( QExifImageHeader::ExifExtendedTag tag,lExifIfdTags) {
+    //        lExifIfdValues << d->exifIfdValues.value(tag);
+    //    }
+    //    qDebug() << "   : Exifversion = " << lExifIfdValues[3].toByteArray();
 
 
     d->gpsIfdValues = readIfdValues<GpsTag>(stream, startPos, gpsIfdPointer);
@@ -1458,7 +1461,7 @@ bool QExifImageHeader::read(QIODevice *device)
         d->thumbnailIfdValues = readIfdValues<quint16>(stream, startPos, thumbnailHeaders);
         QExifValue jpegOffset = d->thumbnailIfdValues.value(JpegInterchangeFormat);
         QExifValue jpegLength = d->thumbnailIfdValues.value(JpegInterchangeFormatLength);
-//  qDebug() << "Nach: Exifversion = " << d->exifIfdValues.value(ExifVersion).toByteArray();
+        //  qDebug() << "Nach: Exifversion = " << d->exifIfdValues.value(ExifVersion).toByteArray();
         if (jpegOffset.type() == QExifValue::Long && jpegOffset.count() == 1
                 && jpegLength.type() == QExifValue::Long && jpegLength.count() == 1)
         {
