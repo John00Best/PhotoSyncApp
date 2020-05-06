@@ -31,7 +31,7 @@ ApplicationWindow {
         }
         progressBarRun.to = syncTotal
         progressBarRun.value = syncDone
-        var picsPerSecond = (syncDone-firstSyncsDoneCount)/((newTime-firstSyncsDoneTime)/1000)
+        var picsPerSecond = Number(syncDone-firstSyncsDoneCount)/((newTime-firstSyncsDoneTime)/1000)
         progressTextRun.text = syncDone+"/"+syncTotal+" ("+picsPerSecond.toFixed(2)+" Pics/sec)"
         startTime = newTime
         lastSyncsDone = syncDone
